@@ -21,7 +21,8 @@ ma = Marshmallow(app)
 
 # user class
 class User(db.Model):
-    firstname = db.Column(db.String(45), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    firstname = db.Column(db.String(45))
     lastname = db.Column(db.String(45))
     jobtitle = db.Column(db.String(45))
     phonenumber = db.Column(db.String(10))
@@ -53,8 +54,43 @@ def index():
 @app.route('/get', methods=['GET'])
 def get_users_all():
     all_users = User.query.all()
-    results = user_schema.dump(all_users)
+    results = users_schema.dump(all_users)
     return jsonify(results)
+
+
+@app.route('/get/<id>', methods=['GET'])
+def post_details(id):
+    user = User.query.get(id)
+    return user_schema.jsonify(user)
+
+
+@app.route('/update/<id>', methods=['PUT'])
+def update_user(id):
+    user = User.query.get(id)
+
+    user.firstname = request.json['firstname']
+    user.lastname = request.json['lastname']
+    user.jobtitle = request.json['jobtitle']
+    user.phonenumber = request.json['phonenumber']
+    user.country = request.json['country']
+
+    db.session.commit()
+    return user_schema.jsonify(user)
+
+
+@app.route('/add', methods=['POST'])
+def add_user():
+    firstname = request.json['firstname']
+    lastname = request.json['lastname']
+    jobtitle = request.json['jobtitle']
+    phonenumber = request.json['phonenumber']
+    country = request.json['country']
+
+    user = User(firstname=firstname, lastname=lastname,
+                jobtitle=jobtitle, phonenumber=phonenumber, country=country)
+    db.session.add(user)
+    db.session.commit()
+    return user_schema.jsonify(user)
 
 
 if __name__ == '__main__':
